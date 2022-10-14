@@ -38,6 +38,7 @@ class LocatyService : Service(), SensorEventListener {
         val KEY_NOTIFICATION_ID = "notificationId"
         val KEY_ON_SENSOR_CHANGED_ACTION = "com.raywenderlich.android.locaty.ON_SENSOR_CHANGED"
         val KEY_NOTIFICATION_STOP_ACTION = "com.raywenderlich.android.locaty.NOTIFICATION_STOP"
+        val KEY_PITCH = "pitch" // Shimon device pitch
     }
 
     override fun onCreate() {
@@ -50,7 +51,7 @@ class LocatyService : Service(), SensorEventListener {
             sensorManager.registerListener(this, magnetometerReading, SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI)
         }
 
-        val notification = createNotification(getString(R.string.not_available), 0.0)
+        val notification = createNotification(getString(R.string.not_available), 0.0, 0.0)
         startForeground(notificationId, notification)
     }
     override fun onBind(intent: Intent?): IBinder? {
@@ -88,23 +89,25 @@ class LocatyService : Service(), SensorEventListener {
         val degrees = (Math.toDegrees(orientation.get(0).toDouble()) + 360.0) % 360.0
         val angle = round(degrees * 100) / 100
         val direction = getDirection(degrees)
-
+        val pitch = orientation.get(1).toDouble() // Shimon
         val intent = Intent()
         intent.putExtra(KEY_ANGLE, angle)
         intent.putExtra(KEY_DIRECTION, direction)
+        intent.putExtra(KEY_PITCH, pitch)// Shimon
         intent.action = KEY_ON_SENSOR_CHANGED_ACTION
 
         LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
 
         if (background) {
-            val notification = createNotification(direction, angle)
+            val notification = createNotification(direction, angle, pitch)
             startForeground(notificationId, notification)
         } else {
-            stopForeground(true)
+            //stopForeground(true) deprecated in 33
+            STOP_FOREGROUND_DETACH
         }
     }
 
-    private fun createNotification(direction: String, angle: Double): Notification {
+    private fun createNotification(direction: String, angle: Double, pitch: Double): Notification {
 
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -128,20 +131,23 @@ class LocatyService : Service(), SensorEventListener {
 
         val notificationBuilder = NotificationCompat.Builder(baseContext, application.packageName)
         // Open activity intent
+        // Note PendingIntent PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // setting the mutability flag
         val contentIntent = PendingIntent.getActivity(
-            this, notificationActivityRequestCode,
-            Intent(this, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
+            applicationContext, notificationActivityRequestCode,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE)
         // Stop notification intent
         val stopNotificationIntent = Intent(this, WifiP2pManager.ActionListener::class.java)
         stopNotificationIntent.action = KEY_NOTIFICATION_STOP_ACTION
         stopNotificationIntent.putExtra(KEY_NOTIFICATION_ID, notificationId)
         val pendingStopNotificationIntent =
-            PendingIntent.getBroadcast(this, notificationStopRequestCode, stopNotificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(this, notificationStopRequestCode, stopNotificationIntent,
+                PendingIntent.FLAG_IMMUTABLE)
 
         notificationBuilder.setAutoCancel(true)
             .setDefaults(Notification.DEFAULT_ALL)
             .setContentTitle(resources.getString(R.string.app_name))
-            .setContentText("You're currently facing $direction at an angle of $angle°")
+            .setContentText("You're currently facing $direction at an angle of $angle° and pitch is $pitch")
             .setWhen(System.currentTimeMillis())
             .setDefaults(0)
             .setVibrate(longArrayOf(0L))

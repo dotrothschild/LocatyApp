@@ -40,6 +40,7 @@ class MainFragment : Fragment() {
 
 private fun startForegroundServiceForSensors(background: Boolean) {
     val locatyIntent = Intent(requireContext(), LocatyService::class.java)
+    locatyIntent.putExtra(LocatyService.KEY_BACKGROUND, background)
     ContextCompat.startForegroundService(requireContext(), locatyIntent)
 }
 
@@ -63,7 +64,13 @@ private fun startForegroundServiceForSensors(background: Boolean) {
             val angle = intent.getDoubleExtra(LocatyService.KEY_ANGLE,0.0)
             val angleWithDirection = "$angle  $direction"
             binding.directionTextView.text = angleWithDirection
+            // Shimon line below works OK, replacing image with line
             binding.compassImageView.rotation = angle.toFloat() * -1
+
+            // get the pitch
+            val pitch = intent.getDoubleExtra(LocatyService.KEY_PITCH, -1.0)
+            binding.pitchTextView.text = pitch.toString()
+
         }
 
     }
