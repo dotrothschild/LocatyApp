@@ -8,17 +8,13 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.icu.lang.UCharacter.getDirection
 import android.net.wifi.p2p.WifiP2pManager
-import android.os.Build
 import android.os.IBinder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.inzhood.mylocatyapp.MainActivity
 import com.inzhood.mylocatyapp.R
-import com.inzhood.mylocatyapp.service.LocatyService.Companion.KEY_NOTIFICATION_ID
-import com.inzhood.mylocatyapp.service.LocatyService.Companion.KEY_NOTIFICATION_STOP_ACTION
 import kotlin.math.round
 
 class LocatyService : Service(), SensorEventListener {

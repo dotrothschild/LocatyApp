@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.inzhood.mylocatyapp.databinding.FragmentMainBinding
 import com.inzhood.mylocatyapp.service.LocatyService
+import com.inzhood.mylocatyapp.utils.LineProvider
 
 class MainFragment : Fragment() {
     private lateinit var binding: FragmentMainBinding
@@ -65,7 +66,8 @@ private fun startForegroundServiceForSensors(background: Boolean) {
             val angleWithDirection = "$angle  $direction"
             binding.directionTextView.text = angleWithDirection
             // Shimon line below works OK, replacing image with line
-            binding.compassImageView.rotation = angle.toFloat() * -1
+            // binding.compassImageView.rotation = angle.toFloat() * -1
+            binding.compassImageView.setImageBitmap(LineProvider.createLine(angle, 400.0))
 
             // get the pitch
             val pitch = intent.getDoubleExtra(LocatyService.KEY_PITCH, -1.0)
